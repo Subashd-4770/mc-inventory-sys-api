@@ -1,0 +1,1031 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd 
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+    <apikit:config name="mc-inventory-sys-spec-config" api="resource::02c53825-8f52-4597-8f08-3e9e00a89276:mc-inventory-sys-spec:1.0.0:raml:zip:mc-inventory-sys-spec.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+	<flow name="mc-inventory-sys-spec-main">
+        <http:listener config-ref="HTTP_Listener_config" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="mc-inventory-sys-spec-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="mc-inventory-sys-spec-console">
+        <http:listener config-ref="HTTP_Listener_config" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="mc-inventory-sys-spec-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="get:\getById:mc-inventory-sys-spec-config">
+        <logger level="INFO" doc:name="Logger" doc:id="33d88217-17a4-42d7-8be5-8f65d91bd5eb" message='#["Get By Id"]'/>
+        		<set-variable value="#[attributes.queryParams.id]" doc:name="Store Product Id" doc:id="0ea05d92-3e04-4077-aad6-5e5a323645ce" variableName="product" />
+		
+		<ee:cache doc:name="Retrieve from cache" doc:id="e07b7710-2c7d-4b29-b924-625953337603" cachingStrategy-ref="Caching_Strategy">
+			<try doc:name="Retrieve Cache Data" doc:id="75e60cda-21e2-4300-a254-c7e8f10c0a2e">
+
+        <logger level="INFO" doc:name="Logger" doc:id="049c267a-c76a-4da3-8578-a2447bd876fe" message='#["Inside Cache"]' />
+				<db:select doc:name="Fetch Product From Inventory" doc:id="5ed646b8-bc8d-4f65-a144-a6b05215858a" config-ref="Database_Config">
+
+            <db:sql><![CDATA[SELECT *
+FROM inventory
+WHERE product_id = :product_id
+]]></db:sql>
+
+            <db:input-parameters><![CDATA[#[{
+    product_id : vars.product
+}]]]></db:input-parameters>
+
+        </db:select>
+				<error-handler>
+
+            <!-- Database Connectivity Error -->
+            <on-error-propagate type="DB:CONNECTIVITY" enableNotifications="true" logException="true" doc:name="Database Connectivity Error">
+
+                <logger level="ERROR" message='#["Database Connectivity Error : " ++ error.description]' />
+
+                <raise-error type="APP:DATABASE_UNAVAILABLE" description="Unable to connect to Inventory Database" />
+
+            </on-error-propagate>
+
+            <!-- Query Execution Error -->
+            <on-error-propagate type="DB:QUERY_EXECUTION" enableNotifications="true" logException="true" doc:name="Database Query Error">
+
+                <logger level="ERROR" message='#["Database Query Error : " ++ error.description]' />
+
+                <raise-error type="APP:QUERY_EXECUTION_FAILED" description="Failed to fetch product from Inventory" />
+
+            </on-error-propagate>
+
+            <!-- Bad SQL Syntax -->
+            <on-error-propagate type="DB:BAD_SQL_SYNTAX" enableNotifications="true" logException="true" doc:name="Bad SQL Syntax">
+
+                <logger level="ERROR" message='#["Invalid SQL : " ++ error.description]' />
+
+                <raise-error type="APP:DATABASE_ERROR" description="Invalid SQL Statement" />
+
+            </on-error-propagate>
+
+            <!-- Generic Database Error -->
+            <on-error-propagate type="DB:*" enableNotifications="true" logException="true" doc:name="Generic Database Error">
+
+                <logger level="ERROR" message='#["Database Error : " ++ error.description]' />
+
+                <raise-error type="APP:DATABASE_ERROR" description="Unexpected Database Error" />
+
+            </on-error-propagate>
+
+            <!-- Unexpected Error -->
+
+        </error-handler>
+
+    </try>
+		</ee:cache>
+		<choice doc:name="Check Cache Result" doc:id="d9d7ca2d-e241-40ec-9e22-b11cef7f7542" >
+			<when expression="sizeOf(payload) &gt; 0">
+				<logger level="INFO" doc:name="Logger" doc:id="6b3a5a8f-6f81-44c0-a0f9-9312aeb045ef" message='#["Cache Found"]'/>
+				<ee:transform doc:name="Prepare Cache Success Response">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+--- 
+{ 
+	status : true, 
+	message : "Cache Data Found", 
+	data : payload
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="41fe9ac0-e921-4a17-953f-eaef58643505" message='#["Cache Not Found"]'/>
+				<ee:transform doc:name="Prepare Cache Failure Response" doc:id="26ca52d3-e1a4-468c-8832-a5579e81cf49" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0 
+output application/json 
+--- 
+{ 
+	success : false, 
+	message : "Cache Data Not Found", 
+	data : payload
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Return Response" doc:id="c46e7b5f-4faf-4642-b922-e1742bcad585" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0 
+output application/json 
+--- 
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="cb7632cb-2021-400e-920e-c0f1107562bf" message='#["payload type = " ++ typeOf(payload)]'/>
+		<error-handler>
+
+    <!-- Invalid Request -->
+    <on-error-propagate
+            type="APP:INVALID_REQUEST"
+            enableNotifications="true"
+            logException="true"
+            doc:name="Invalid Request">
+
+        <logger level="ERROR"
+                message='#["Invalid Request : " ++ error.description]'/>
+
+        <set-variable variableName="httpStatus" value="400"/>
+
+        <ee:transform doc:name="Prepare 400 Response">
+            <ee:message>
+                <ee:set-payload><![CDATA[
+%dw 2.0
+output application/json
+---
+{
+    success : false,
+    status : 400,
+    message : error.description,
+    timestamp : now()
+}
+]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+
+    </on-error-propagate>
+
+    <!-- Product Not Found -->
+
+    <!-- Database Unavailable -->
+    <on-error-propagate
+            type="APP:DATABASE_UNAVAILABLE"
+            enableNotifications="true"
+            logException="true"
+            doc:name="Database Unavailable">
+
+        <logger level="ERROR"
+                message='#["Database Unavailable : " ++ error.description]'/>
+
+        <set-variable variableName="httpStatus" value="503"/>
+
+        <ee:transform doc:name="Prepare 503 Response">
+            <ee:message>
+                <ee:set-payload><![CDATA[
+%dw 2.0
+output application/json
+---
+{
+    success : false,
+    status : 503,
+    message : "Database is currently unavailable",
+    error : error.description,
+    timestamp : now()
+}
+]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+
+    </on-error-propagate>
+
+    <!-- Database Query Failed -->
+    <on-error-propagate
+            type="APP:QUERY_EXECUTION_FAILED"
+            enableNotifications="true"
+            logException="true"
+            doc:name="Database Query Failed">
+
+        <logger level="ERROR"
+                message='#["Database Query Failed : " ++ error.description]'/>
+
+        <set-variable variableName="httpStatus" value="500"/>
+
+        <ee:transform doc:name="Prepare Query Error Response">
+            <ee:message>
+                <ee:set-payload><![CDATA[
+%dw 2.0
+output application/json
+---
+{
+    success : false,
+    status : 500,
+    message : "Failed to retrieve product",
+    error : error.description,
+    timestamp : now()
+}
+]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+
+    </on-error-propagate>
+
+    <!-- Generic Database Error -->
+    <on-error-propagate
+            type="APP:DATABASE_ERROR"
+            enableNotifications="true"
+            logException="true"
+            doc:name="Database Error">
+
+        <logger level="ERROR"
+                message='#["Database Error : " ++ error.description]'/>
+
+        <set-variable variableName="httpStatus" value="500"/>
+
+        <ee:transform doc:name="Prepare Database Error Response">
+            <ee:message>
+                <ee:set-payload><![CDATA[
+%dw 2.0
+output application/json
+---
+{
+    success : false,
+    status : 500,
+    message : "Database Error",
+    error : error.description,
+    timestamp : now()
+}
+]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+
+    </on-error-propagate>
+
+    <!-- Catch All -->
+    <on-error-propagate
+            type="ANY"
+            enableNotifications="true"
+            logException="true"
+            doc:name="Internal Server Error">
+
+        <logger level="ERROR"
+                message='#["Unexpected Error : " ++ error.description]'/>
+
+        <set-variable variableName="httpStatus" value="500"/>
+
+        <ee:transform doc:name="Prepare Internal Server Error">
+            <ee:message>
+                <ee:set-payload><![CDATA[
+%dw 2.0
+output application/json
+---
+{
+    success : false,
+    status : 500,
+    message : "Internal Server Error",
+    error : error.description,
+    timestamp : now()
+}
+]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+
+    </on-error-propagate>
+
+</error-handler>
+    </flow>
+    <flow name="get:\getCacheById:mc-inventory-sys-spec-config">
+        <logger level="INFO" doc:name="Logger" doc:id="55968113-0355-4f76-bcc8-8484dd3e9482" message='#["Cache Flow Started"]'/>
+		<set-variable value="#[attributes.queryParams.id]" doc:name="Store Product Id" doc:id="92986b92-2ea2-4bde-ba46-c602c118fd17" variableName="product"/>
+		<choice doc:name="Validate Product Id">
+
+    <when expression="#[isEmpty(vars.product)]">
+
+        <raise-error
+                type="APP:INVALID_REQUEST"
+                description="Product Id is mandatory"/>
+
+    </when>
+			<otherwise >
+				<ee:cache cachingStrategy-ref="Caching_Strategy">
+
+    <try doc:name="Retrieve Cache">
+
+        <db:select doc:name="Fetch Product From Inventory" doc:id="49a0aac8-883a-4529-bd23-3cbe3e617e17" config-ref="Database_Config">
+				<db:sql><![CDATA[SELECT * FROM inventory
+WHERE product_id = :product_id]]></db:sql>
+				<db:input-parameters><![CDATA[#[product_id: vars.product]]]></db:input-parameters>
+			</db:select>
+
+        <error-handler>
+
+            <on-error-propagate type="DB:CONNECTIVITY">
+
+                <logger level="ERROR" message='#["Cache DB Connectivity Error : " ++ error.description]' />
+
+            </on-error-propagate>
+
+            <on-error-propagate type="DB:QUERY_EXECUTION">
+
+                <logger level="ERROR" message='#["Cache Query Failed : " ++ error.description]' />
+
+            </on-error-propagate>
+            <on-error-propagate type="ANY"
+                                enableNotifications="true"
+                                logException="true"
+                                doc:name="Unexpected Error">
+
+                <logger level="ERROR"
+                        message='#["Unexpected Error : " ++ error.description]'/>
+
+                <raise-error
+                        type="APP:INTERNAL_SERVER_ERROR"
+                        description="Unexpected Error Occurred"/>
+
+            </on-error-propagate>
+
+        </error-handler>
+
+    </try>
+
+</ee:cache>
+			</otherwise>
+
+</choice>
+		<choice doc:name="Check Cache Availability" doc:id="c90de8c8-46e2-494c-a633-aa5344aa28b8" >
+			<when expression="sizeOf(payload) &gt; 0">
+				<logger level="INFO" doc:name="Logger" doc:id="d004c80a-af6b-4f3a-87e3-d769a7159595" message='#["Data Found"]'/>
+				<ee:transform doc:name="Prepare Cache Success Response">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	status : true,
+    message : "Data Found In Cache",
+    data : payload
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="6f8e2418-29c9-4445-a17c-2295b68e6a76" message='#[vars.product]'/>
+				<try doc:name="Salesforce Query">
+
+    <salesforce:query doc:name="Retrieve Product From Salesforce" doc:id="09eb5155-32b9-4b47-9d1e-f7f07e2e26b8" config-ref="Salesforce_Config" >
+					<salesforce:salesforce-query ><![CDATA[select product_id__c,product_name__c,quantity__c from Product2
+where product_id__c = :product_id]]></salesforce:salesforce-query>
+					<salesforce:parameters ><![CDATA[#[{
+    product_id : vars.product
+}]]]></salesforce:parameters>
+						<salesforce:headers />
+				</salesforce:query>
+    <logger level="INFO" doc:name="Logger" doc:id="f4666283-33ff-4943-a2c8-7135dd3fd8ac" message='#[write(payload,"application/json")]'/>
+					<error-handler>
+
+        <on-error-propagate type="SALESFORCE:CONNECTIVITY">
+
+            <logger level="ERROR"
+                    message='#["Salesforce Connectivity Error"]'/>
+
+        </on-error-propagate>
+
+        <on-error-propagate type="ANY">
+
+            <logger level="ERROR"
+                    message='#["Salesforce Error : " ++ error.description]'/>
+
+        </on-error-propagate>
+
+    </error-handler>
+
+</try>
+				<choice doc:name="Check Salesforce Result" doc:id="908539f2-44ca-4f48-97ce-a9cf56e0d7c4" >
+					<when expression="#[sizeOf(payload) &gt; 0]">
+						<logger level="INFO" doc:name="Logger" doc:id="ecd25147-f4a5-4902-b83f-dd3686f88e7a" message='#["Data Insert in Cache"]'/>
+						<set-variable value="#[{&#10;    product_id : payload[0].product_id__c as Number,&#10;    product_name : payload[0].product_name__c,&#10;    quantity : payload[0].quantity__c as Number&#10;}]" doc:name="Store Salesforce Product" doc:id="fccc1c5a-fc94-4ac5-878b-1767e0833b97" variableName="salesforceproduct" />
+						<logger level="INFO" doc:name="Logger" doc:id="ab74e980-8e72-481b-bec2-822669c7a52b" message="#[vars.salesforceproduct]"/>
+						<logger level="INFO" doc:name="Logger" doc:id="e293d512-60a1-41a3-8aa3-b82fb395f57f" message="#[typeOf(vars.salesforceproduct.product_id__c) ++&#10;typeOf(vars.salesforceproduct.quantity__c)]"/>
+						<try doc:name="Insert Into Cache">
+
+    <db:insert doc:name="Store Product In Cache" doc:id="2617236e-3147-4591-98b6-75e11938696c" config-ref="Database_Config">
+								<db:sql ><![CDATA[INSERT INTO inventory
+(
+product_id,
+product_name,
+quantity
+)
+VALUES
+(
+	:product_id,
+	:product_name,
+	:quantity
+)	]]></db:sql>
+								<db:input-parameters ><![CDATA[#[vars.salesforceproduct]]]></db:input-parameters>
+							</db:insert>
+							<error-handler>
+
+        <on-error-propagate type="DB:CONNECTIVITY">
+
+            <logger level="ERROR"
+                    message='#["Database Connection Failed"]'/>
+
+        </on-error-propagate>
+
+    </error-handler>
+
+</try>
+						<ee:transform doc:name="Prepare Cache Insert Response" doc:id="72eaacf6-830a-4832-8819-ae2aefcc7cda">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	status : true,
+	message : "Inserted in Cache Table",
+	data : vars.salesforceproduct
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+					</when>
+					<otherwise >
+						<logger level="INFO" doc:name="Logger" doc:id="17dbb1b0-8b52-4850-9325-ea63247fab86" message='#["Product Not Found In Salesforce"]'/>
+						<ee:transform doc:name="Prepare Product Not Found Response" doc:id="e8b74d63-8ad2-4f4a-9f51-92f9d6914dd1" >
+							<ee:message >
+								<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	status : false,
+    message : "Data Not Found In SalesForce and Cache",
+    data : payload
+}]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+					</otherwise>
+				</choice>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Logger" doc:id="5bb2c564-dda3-484f-9f7c-6c4608ccb8f2" message='#["Cache Flow Completed"]'/>
+		<error-handler>
+
+    <on-error-propagate type="APP:INVALID_REQUEST">
+
+        <set-variable variableName="httpStatus"
+                      value="400"/>
+
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[
+%dw 2.0
+output application/json
+---
+{
+    success:false,
+    status:400,
+    message:error.description,
+    timestamp:now()
+}
+]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+
+    </on-error-propagate>
+
+    <on-error-propagate type="DB:*">
+
+        <set-variable variableName="httpStatus"
+                      value="503"/>
+
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[
+%dw 2.0
+output application/json
+---
+{
+    success:false,
+    status:503,
+    message:"Database Unavailable",
+    error:error.description,
+    timestamp:now()
+}
+]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+
+    </on-error-propagate>
+
+    <on-error-propagate type="SALESFORCE:*">
+
+        <set-variable variableName="httpStatus"
+                      value="503"/>
+
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[
+%dw 2.0
+output application/json
+---
+{
+    success:false,
+    status:503,
+    message:"Salesforce Service Unavailable",
+    error:error.description,
+    timestamp:now()
+}
+]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+
+    </on-error-propagate>
+
+    <on-error-propagate type="ANY">
+
+        <set-variable variableName="httpStatus"
+                      value="500"/>
+
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[
+%dw 2.0
+output application/json
+---
+{
+    success:false,
+    status:500,
+    message:"Internal Server Error",
+    error:error.description,
+    timestamp:now()
+}
+]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+
+    </on-error-propagate>
+
+</error-handler>
+    </flow>
+    <flow name="get:\getProducts:mc-inventory-sys-spec-config">
+
+    <logger level="INFO"
+            doc:name="Flow Started"
+            message='#["Started To Get Products"]'/>
+
+    <try doc:name="Fetch Products From Database">
+
+        <db:select config-ref="Database_Config"
+                   doc:name="Fetch All Products">
+
+            <db:sql><![CDATA[SELECT *
+from inventory]]></db:sql>
+
+        </db:select>
+
+        <choice doc:name="Check Products Available">
+
+            <when expression="#[sizeOf(payload) &gt; 0]">
+
+                <logger level="INFO"
+                        message='#["Products Found : " ++ sizeOf(payload)]'/>
+
+                <ee:transform doc:name="Prepare Success Response">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[
+%dw 2.0
+output application/json
+---
+{
+    success: true,
+    message: "Products Retrieved Successfully",
+    totalRecords: sizeOf(payload),
+    data: payload
+}
+]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+
+            </when>
+
+            <otherwise>
+
+                <logger level="INFO"
+                        message='#["Inventory Table Is Empty"]'/>
+
+                <ee:transform doc:name="Prepare Empty Response">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[
+%dw 2.0
+output application/json
+---
+{
+    success: true,
+    message: "No Products Found",
+    totalRecords: 0,
+    data: []
+}
+]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+
+            </otherwise>
+
+        </choice>
+
+        <error-handler>
+
+            <!-- Database Connectivity -->
+            <on-error-propagate type="DB:CONNECTIVITY"
+                                logException="true">
+
+                <logger level="ERROR"
+                        message='#["Database Connectivity Error : " ++ error.description]'/>
+
+                <set-variable variableName="httpStatus"
+                              value="503"/>
+
+                <ee:transform doc:name="DB Connectivity Response">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[
+%dw 2.0
+output application/json
+---
+{
+    success: false,
+    status: 503,
+    message: "Unable to connect to Database",
+    error: error.description,
+    timestamp: now()
+}
+]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+
+            </on-error-propagate>
+
+            <!-- Query Execution Error -->
+            <on-error-propagate type="DB:QUERY_EXECUTION"
+                                logException="true">
+
+                <logger level="ERROR"
+                        message='#["Query Execution Error : " ++ error.description]'/>
+
+                <set-variable variableName="httpStatus"
+                              value="500"/>
+
+                <ee:transform doc:name="Query Error Response">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[
+%dw 2.0
+output application/json
+---
+{
+    success: false,
+    status: 500,
+    message: "Database Query Failed",
+    error: error.description,
+    timestamp: now()
+}
+]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+
+            </on-error-propagate>
+
+        </error-handler>
+
+    </try>
+
+    <logger level="INFO"
+            message='#["Flow Completed Successfully"]'/>
+
+    <error-handler>
+
+        <!-- Handles all unexpected errors in the flow -->
+        <on-error-propagate type="ANY"
+                            logException="true">
+
+            <logger level="ERROR"
+                    message='#["Unexpected Error : " ++ error.description]'/>
+
+            <set-variable variableName="httpStatus"
+                          value="500"/>
+
+            <ee:transform doc:name="Internal Server Error">
+                <ee:message>
+                    <ee:set-payload><![CDATA[
+%dw 2.0
+output application/json
+---
+{
+    success: false,
+    status: 500,
+    message: "Internal Server Error",
+    errorDescription: error.description,
+    timestamp: now()
+}
+]]></ee:set-payload>
+                </ee:message>
+            </ee:transform>
+
+        </on-error-propagate>
+
+    </error-handler>
+
+</flow>
+    <flow name="post:\saveInventory:application\json:mc-inventory-sys-spec-config">
+
+    <logger level="INFO"
+            doc:name="Flow Started"
+            message='#["Inventory Insert Flow Started"]'/>
+
+    <ee:transform doc:name="Transform Inventory Payload">
+        <ee:message>
+            <ee:set-payload><![CDATA[
+%dw 2.0
+output application/json
+---
+payload
+]]></ee:set-payload>
+        </ee:message>
+    </ee:transform>
+
+    <set-variable variableName="inventory"
+                  value="#[payload]"
+                  doc:name="Store Inventory Payload"/>
+
+    <logger level="INFO"
+            message='#["Payload = " ++ write(payload,"application/json")]'/>
+
+    <!-- Validation -->
+    <choice doc:name="Validate Request">
+
+        <when expression="#[isEmpty(payload.product_id)]">
+            <raise-error type="APP:INVALID_REQUEST"
+                         description="Product Id is mandatory"/>
+        </when>
+
+        <when expression="#[isEmpty(payload.product_name)]">
+            <raise-error type="APP:INVALID_REQUEST"
+                         description="Product Name is mandatory"/>
+        </when>
+
+        <when expression="#[payload.quantity == null]">
+            <raise-error type="APP:INVALID_REQUEST"
+                         description="Quantity is mandatory"/>
+        </when>
+
+        <when expression="#[payload.quantity &lt; 0]">
+            <raise-error type="APP:INVALID_REQUEST"
+                         description="Quantity cannot be negative"/>
+        </when>
+		<otherwise >
+		
+		<until-successful maxRetries="5"
+                      millisBetweenRetries="6000"
+                      doc:name="Retry Insert">
+
+        <try doc:name="Insert Inventory">
+
+            <db:insert config-ref="Database_Config"
+                       doc:name="Insert Inventory Record">
+
+                <db:sql><![CDATA[
+INSERT INTO inventory
+(
+product_id,
+product_name,
+quantity
+)
+VALUES
+(
+:product_id,
+:product_name,
+:quantity
+)
+]]></db:sql>
+
+                <db:input-parameters><![CDATA[#[{
+    product_id: payload.product_id,
+    product_name: payload.product_name,
+    quantity: payload.quantity
+}]]]></db:input-parameters>
+
+            </db:insert>
+
+            <!-- Processor Level Error Handling -->
+            <error-handler>
+            
+                <on-error-propagate type="DB:CONNECTIVITY"
+                                    logException="true">
+
+                    <logger level="ERROR"
+                            message='#["Database Connectivity Error : " ++ error.description]'/>
+
+                </on-error-propagate>
+
+            </error-handler>
+
+        </try>
+
+    </until-successful>
+		</otherwise>
+    </choice>
+
+    
+
+    <ee:transform doc:name="Prepare Success Response">
+        <ee:message>
+            <ee:set-payload><![CDATA[
+%dw 2.0
+output application/json
+---
+{
+    success : true,
+    message : "Inventory inserted successfully",
+    data : vars.inventory
+}
+]]></ee:set-payload>
+        </ee:message>
+    </ee:transform>
+
+    <logger level="INFO"
+            message='#["Inventory inserted successfully"]'/>
+
+    <!-- Flow Level Error Handling -->
+    <error-handler>
+
+        <!-- Validation Errors -->
+        <on-error-propagate type="APP:INVALID_REQUEST"
+                            logException="true">
+
+            <set-variable variableName="httpStatus"
+                          value="400"/>
+
+            <ee:transform doc:name="Validation Error">
+                <ee:message>
+                    <ee:set-payload><![CDATA[
+%dw 2.0
+output application/json
+---
+{
+    success:false,
+    status:400,
+    message:error.description,
+    timestamp:now()
+}
+]]></ee:set-payload>
+                </ee:message>
+            </ee:transform>
+
+        </on-error-propagate>
+
+        <!-- Database Error -->
+        <on-error-propagate type="DB:*"
+                            logException="true">
+
+            <set-variable variableName="httpStatus"
+                          value="503"/>
+
+            <ee:transform doc:name="Database Error">
+                <ee:message>
+                    <ee:set-payload><![CDATA[
+%dw 2.0
+output application/json
+---
+{
+    success:false,
+    status:503,
+    message:"Database unavailable",
+    error:error.description,
+    timestamp:now()
+}
+]]></ee:set-payload>
+                </ee:message>
+            </ee:transform>
+
+        </on-error-propagate>
+
+        <!-- Generic Error -->
+        <on-error-propagate type="ANY"
+                            logException="true">
+
+            <set-variable variableName="httpStatus"
+                          value="500"/>
+
+            <ee:transform doc:name="Internal Server Error">
+                <ee:message>
+                    <ee:set-payload><![CDATA[
+%dw 2.0
+output application/json
+---
+{
+    success:false,
+    status:500,
+    message:"Internal Server Error",
+    error:error.description,
+    timestamp:now()
+}
+]]></ee:set-payload>
+                </ee:message>
+            </ee:transform>
+
+        </on-error-propagate>
+
+    </error-handler>
+
+</flow>
+</mule>
